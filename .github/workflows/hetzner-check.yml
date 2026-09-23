@@ -36,7 +36,7 @@ jobs:
         env:
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-          SERVER_TYPES: cx33,cax21,cpx22 
+          SERVER_TYPES: cx33,cax21
           LOCATIONS: fsn1,nbg1
           FORCE_TEST: ${{ inputs.test }}
         run: python3 check_hetzner.py
