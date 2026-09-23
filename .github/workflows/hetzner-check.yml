@@ -1,0 +1,48 @@
+name: Hetzner-Verfuegbarkeit
+
+on:
+  schedule:
+    # alle 10 Minuten, bewusst nicht zur vollen Stunde (dort staut GitHub am meisten)
+    - cron: "7,17,27,37,47,57 * * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Test-Push senden"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hetzner-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Letzten Status laden
+        uses: actions/cache/restore@v4
+        with:
+          path: state
+          key: hetzner-state-${{ github.run_id }}
+          restore-keys: hetzner-state-
+
+      - name: Verfuegbarkeit pruefen
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          SERVER_TYPES: cx33,cax21
+          LOCATIONS: fsn1,nbg1
+          FORCE_TEST: ${{ inputs.test }}
+        run: python3 check_hetzner.py
+
+      - name: Status speichern
+        uses: actions/cache/save@v4
+        with:
+          path: state
+          key: hetzner-state-${{ github.run_id }}
